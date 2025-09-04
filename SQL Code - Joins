@@ -1,0 +1,15 @@
+-- These are all practices of different SQL Joins:
+
+select CustomerName, Orders.Product from Customers
+Left join ON Customers.CustomerID = Orders.CustomerID;
+
+Select product, Customers.CustomerName from Orders
+Right join Orders.CustomerID on Customers.CustomerID;
+
+SELECT Customers.CustomerName, Orders.Product
+FROM Customers
+FULL OUTER JOIN Orders ON Customers.CustomerID = Orders.CustomerID;
+
+SELECT Customers.CustomerName, Orders.Product
+FROM Customers
+CROSS JOIN Orders;
