@@ -6,5 +6,14 @@ CREATE Students (
     City varchar(255)
 );
 
+Insert into Students (
+    StudentID int,
+    LastName varchar(255),
+    FirstName varchar(255),
+    Address varchar(255),
+    City varchar(255)
+Values (1, Echeveria, Rosario, 111 Made up street, Los Angeles),
+(2, Boston, Anthony, 149 Leon street, Los Angeles);
+
 Select StudentID, LastName from Students;
 
