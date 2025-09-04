@@ -1,0 +1,5 @@
+Select Name from Students where Grade in ('A', 'B');
+
+Select name from Students where Age between '22' and '30';
+
+select Name from Students where Name like 'J%';
