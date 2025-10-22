@@ -1,0 +1,574 @@
+-- ============================================
+-- E-COMMERCE ANALYTICS PLATFORM
+-- ============================================
+
+-- ============================================
+-- PART 1: DATABASE SCHEMA
+-- ============================================
+
+-- Users table (customers and sellers)
+CREATE TABLE users (
+    user_id INT PRIMARY KEY AUTO_INCREMENT,
+    email VARCHAR(255) UNIQUE NOT NULL,
+    username VARCHAR(100) NOT NULL,
+    user_type ENUM('customer', 'seller', 'both') NOT NULL,
+    registration_date DATE NOT NULL,
+    country VARCHAR(50),
+    INDEX idx_registration_date (registration_date),
+    INDEX idx_user_type (user_type)
+);
+
+-- Categories table
+CREATE TABLE categories (
+    category_id INT PRIMARY KEY AUTO_INCREMENT,
+    category_name VARCHAR(100) NOT NULL,
+    parent_category_id INT,
+    FOREIGN KEY (parent_category_id) REFERENCES categories(category_id)
+);
+
+-- Products table
+CREATE TABLE products (
+    product_id INT PRIMARY KEY AUTO_INCREMENT,
+    seller_id INT NOT NULL,
+    category_id INT NOT NULL,
+    product_name VARCHAR(255) NOT NULL,
+    description TEXT,
+    price DECIMAL(10, 2) NOT NULL,
+    stock_quantity INT NOT NULL DEFAULT 0,
+    created_date DATE NOT NULL,
+    FOREIGN KEY (seller_id) REFERENCES users(user_id),
+    FOREIGN KEY (category_id) REFERENCES categories(category_id),
+    INDEX idx_category (category_id),
+    INDEX idx_price (price),
+    INDEX idx_seller (seller_id)
+);
+
+-- Orders table
+CREATE TABLE orders (
+    order_id INT PRIMARY KEY AUTO_INCREMENT,
+    customer_id INT NOT NULL,
+    order_date DATETIME NOT NULL,
+    status ENUM('pending', 'confirmed', 'shipped', 'delivered', 'cancelled') NOT NULL,
+    total_amount DECIMAL(10, 2) NOT NULL,
+    FOREIGN KEY (customer_id) REFERENCES users(user_id),
+    INDEX idx_customer (customer_id),
+    INDEX idx_order_date (order_date),
+    INDEX idx_status (status)
+);
+
+-- Order Items table
+CREATE TABLE order_items (
+    order_item_id INT PRIMARY KEY AUTO_INCREMENT,
+    order_id INT NOT NULL,
+    product_id INT NOT NULL,
+    quantity INT NOT NULL,
+    price_at_purchase DECIMAL(10, 2) NOT NULL,
+    FOREIGN KEY (order_id) REFERENCES orders(order_id),
+    FOREIGN KEY (product_id) REFERENCES products(product_id),
+    INDEX idx_order (order_id),
+    INDEX idx_product (product_id)
+);
+
+-- Shopping Cart table
+CREATE TABLE shopping_cart (
+    cart_id INT PRIMARY KEY AUTO_INCREMENT,
+    customer_id INT NOT NULL,
+    product_id INT NOT NULL,
+    quantity INT NOT NULL,
+    added_date DATETIME NOT NULL,
+    FOREIGN KEY (customer_id) REFERENCES users(user_id),
+    FOREIGN KEY (product_id) REFERENCES products(product_id),
+    UNIQUE KEY unique_cart_item (customer_id, product_id),
+    INDEX idx_customer (customer_id)
+);
+
+-- Reviews table
+CREATE TABLE reviews (
+    review_id INT PRIMARY KEY AUTO_INCREMENT,
+    product_id INT NOT NULL,
+    customer_id INT NOT NULL,
+    order_id INT NOT NULL,
+    rating INT NOT NULL CHECK (rating BETWEEN 1 AND 5),
+    review_text TEXT,
+    review_date DATETIME NOT NULL,
+    FOREIGN KEY (product_id) REFERENCES products(product_id),
+    FOREIGN KEY (customer_id) REFERENCES users(user_id),
+    FOREIGN KEY (order_id) REFERENCES orders(order_id),
+    INDEX idx_product (product_id),
+    INDEX idx_rating (rating)
+);
+
+-- Payment Transactions table
+CREATE TABLE payment_transactions (
+    transaction_id INT PRIMARY KEY AUTO_INCREMENT,
+    order_id INT NOT NULL,
+    payment_method ENUM('credit_card', 'debit_card', 'paypal', 'crypto') NOT NULL,
+    amount DECIMAL(10, 2) NOT NULL,
+    transaction_date DATETIME NOT NULL,
+    status ENUM('pending', 'completed', 'failed', 'refunded') NOT NULL,
+    FOREIGN KEY (order_id) REFERENCES orders(order_id),
+    INDEX idx_order (order_id),
+    INDEX idx_status (status)
+);
+
+-- ============================================
+-- PART 2: SAMPLE DATA GENERATION
+-- ============================================
+
+-- Insert Users
+INSERT INTO users (email, username, user_type, registration_date, country) VALUES
+('john.doe@email.com', 'johndoe', 'customer', '2023-01-15', 'USA'),
+('jane.smith@email.com', 'janesmith', 'customer', '2023-02-20', 'UK'),
+('seller1@shop.com', 'TechStore', 'seller', '2023-01-10', 'USA'),
+('seller2@shop.com', 'FashionHub', 'seller', '2023-01-12', 'France'),
+('mike.jones@email.com', 'mikej', 'customer', '2023-03-05', 'Canada'),
+('sarah.wilson@email.com', 'sarahw', 'both', '2023-02-28', 'USA'),
+('bob.brown@email.com', 'bobb', 'customer', '2023-04-10', 'Germany'),
+('alice.davis@email.com', 'aliced', 'customer', '2023-01-25', 'USA'),
+('seller3@shop.com', 'HomeGoods', 'seller', '2023-02-01', 'UK'),
+('tom.martin@email.com', 'tomm', 'customer', '2023-05-15', 'Australia');
+
+-- Insert Categories
+INSERT INTO categories (category_name, parent_category_id) VALUES
+('Electronics', NULL),
+('Computers', 1),
+('Smartphones', 1),
+('Clothing', NULL),
+('Men''s Clothing', 4),
+('Women''s Clothing', 4),
+('Home & Garden', NULL),
+('Furniture', 7),
+('Kitchen', 7);
+
+-- Insert Products
+INSERT INTO products (seller_id, category_id, product_name, description, price, stock_quantity, created_date) VALUES
+(3, 2, 'Laptop Pro 15', 'High-performance laptop', 1299.99, 50, '2023-01-15'),
+(3, 2, 'Gaming Desktop', 'RGB gaming computer', 1899.99, 30, '2023-01-20'),
+(3, 3, 'Smartphone X', 'Latest smartphone model', 899.99, 100, '2023-02-01'),
+(4, 5, 'Men''s T-Shirt', 'Cotton comfort tee', 29.99, 200, '2023-01-25'),
+(4, 6, 'Women''s Dress', 'Summer floral dress', 79.99, 150, '2023-02-10'),
+(4, 5, 'Men''s Jeans', 'Classic denim jeans', 59.99, 180, '2023-02-15'),
+(9, 8, 'Office Chair', 'Ergonomic office chair', 249.99, 75, '2023-02-20'),
+(9, 9, 'Blender Pro', 'High-speed blender', 129.99, 60, '2023-03-01'),
+(3, 3, 'Wireless Earbuds', 'Noise-cancelling earbuds', 149.99, 120, '2023-03-10'),
+(6, 9, 'Coffee Maker', 'Programmable coffee maker', 89.99, 90, '2023-03-15');
+
+-- Insert Orders
+INSERT INTO orders (customer_id, order_date, status, total_amount) VALUES
+(1, '2023-03-01 10:30:00', 'delivered', 1329.98),
+(2, '2023-03-05 14:20:00', 'delivered', 899.99),
+(5, '2023-03-10 09:15:00', 'delivered', 89.98),
+(1, '2023-04-01 11:00:00', 'delivered', 149.99),
+(7, '2023-04-05 16:45:00', 'delivered', 249.99),
+(8, '2023-04-10 13:30:00', 'shipped', 1899.99),
+(2, '2023-04-15 10:00:00', 'delivered', 209.98),
+(5, '2023-05-01 12:20:00', 'delivered', 79.99),
+(10, '2023-05-05 15:30:00', 'delivered', 379.97),
+(1, '2023-05-10 09:45:00', 'delivered', 129.99);
+
+-- Insert Order Items
+INSERT INTO order_items (order_id, product_id, quantity, price_at_purchase) VALUES
+(1, 1, 1, 1299.99),
+(1, 4, 1, 29.99),
+(2, 3, 1, 899.99),
+(3, 4, 2, 29.99),
+(3, 4, 1, 29.99),
+(4, 9, 1, 149.99),
+(5, 7, 1, 249.99),
+(6, 2, 1, 1899.99),
+(7, 8, 1, 129.99),
+(7, 5, 1, 79.99),
+(8, 5, 1, 79.99),
+(9, 6, 2, 59.99),
+(9, 10, 1, 89.99),
+(9, 9, 1, 149.99),
+(10, 8, 1, 129.99);
+
+-- Insert Reviews
+INSERT INTO reviews (product_id, customer_id, order_id, rating, review_text, review_date) VALUES
+(1, 1, 1, 5, 'Excellent laptop, very fast!', '2023-03-10 14:30:00'),
+(3, 2, 2, 4, 'Good phone but battery could be better', '2023-03-15 16:20:00'),
+(4, 5, 3, 5, 'Perfect fit and comfortable', '2023-03-20 11:00:00'),
+(9, 1, 4, 5, 'Amazing sound quality', '2023-04-10 09:30:00'),
+(7, 7, 5, 4, 'Comfortable but assembly was tricky', '2023-04-15 13:00:00'),
+(5, 2, 7, 5, 'Beautiful dress, exactly as pictured', '2023-04-25 10:45:00'),
+(5, 5, 8, 5, 'Love this dress!', '2023-05-10 15:20:00');
+
+-- Insert Shopping Cart items (current cart items)
+INSERT INTO shopping_cart (customer_id, product_id, quantity, added_date) VALUES
+(1, 2, 1, '2023-05-20 10:00:00'),
+(7, 3, 1, '2023-05-21 14:30:00'),
+(10, 7, 1, '2023-05-22 09:15:00');
+
+-- Insert Payment Transactions
+INSERT INTO payment_transactions (order_id, payment_method, amount, transaction_date, status) VALUES
+(1, 'credit_card', 1329.98, '2023-03-01 10:35:00', 'completed'),
+(2, 'paypal', 899.99, '2023-03-05 14:25:00', 'completed'),
+(3, 'debit_card', 89.98, '2023-03-10 09:20:00', 'completed'),
+(4, 'credit_card', 149.99, '2023-04-01 11:05:00', 'completed'),
+(5, 'paypal', 249.99, '2023-04-05 16:50:00', 'completed'),
+(6, 'credit_card', 1899.99, '2023-04-10 13:35:00', 'completed'),
+(7, 'debit_card', 209.98, '2023-04-15 10:05:00', 'completed'),
+(8, 'credit_card', 79.99, '2023-05-01 12:25:00', 'completed'),
+(9, 'paypal', 379.97, '2023-05-05 15:35:00', 'completed'),
+(10, 'credit_card', 129.99, '2023-05-10 09:50:00', 'completed');
+
+-- ============================================
+-- PART 3: ADVANCED SQL QUERIES
+-- ============================================
+
+-- Query 1: Running Total of Sales by Date
+-- Shows cumulative revenue over time
+SELECT 
+    DATE(order_date) as order_day,
+    SUM(total_amount) as daily_revenue,
+    SUM(SUM(total_amount)) OVER (ORDER BY DATE(order_date)) as running_total
+FROM orders
+WHERE status != 'cancelled'
+GROUP BY DATE(order_date)
+ORDER BY order_day;
+
+-- Query 2: Customer Lifetime Value (CLV)
+-- Calculate total spending, order count, and average order value per customer
+SELECT 
+    u.user_id,
+    u.username,
+    COUNT(DISTINCT o.order_id) as total_orders,
+    SUM(o.total_amount) as lifetime_value,
+    AVG(o.total_amount) as avg_order_value,
+    DATEDIFF(MAX(o.order_date), u.registration_date) as customer_age_days
+FROM users u
+LEFT JOIN orders o ON u.user_id = o.customer_id AND o.status != 'cancelled'
+WHERE u.user_type IN ('customer', 'both')
+GROUP BY u.user_id, u.username, u.registration_date
+ORDER BY lifetime_value DESC;
+
+-- Query 3: Top Products by Category with Ranking
+-- Use window functions to rank products within each category
+SELECT 
+    c.category_name,
+    p.product_name,
+    COUNT(oi.order_item_id) as units_sold,
+    SUM(oi.quantity * oi.price_at_purchase) as total_revenue,
+    RANK() OVER (PARTITION BY c.category_id ORDER BY SUM(oi.quantity * oi.price_at_purchase) DESC) as revenue_rank,
+    DENSE_RANK() OVER (PARTITION BY c.category_id ORDER BY COUNT(oi.order_item_id) DESC) as popularity_rank
+FROM products p
+JOIN categories c ON p.category_id = c.category_id
+LEFT JOIN order_items oi ON p.product_id = oi.product_id
+GROUP BY c.category_name, c.category_id, p.product_name, p.product_id
+ORDER BY c.category_name, revenue_rank;
+
+-- Query 4: Month-over-Month Growth
+-- Compare each month's revenue to the previous month
+WITH monthly_revenue AS (
+    SELECT 
+        DATE_FORMAT(order_date, '%Y-%m') as month,
+        SUM(total_amount) as revenue
+    FROM orders
+    WHERE status != 'cancelled'
+    GROUP BY DATE_FORMAT(order_date, '%Y-%m')
+)
+SELECT 
+    month,
+    revenue,
+    LAG(revenue) OVER (ORDER BY month) as previous_month_revenue,
+    revenue - LAG(revenue) OVER (ORDER BY month) as revenue_change,
+    ROUND(((revenue - LAG(revenue) OVER (ORDER BY month)) / LAG(revenue) OVER (ORDER BY month) * 100), 2) as growth_percentage
+FROM monthly_revenue
+ORDER BY month;
+
+-- Query 5: Customer Cohort Analysis
+-- Retention analysis by registration month
+WITH cohorts AS (
+    SELECT 
+        u.user_id,
+        DATE_FORMAT(u.registration_date, '%Y-%m') as cohort_month,
+        DATE_FORMAT(o.order_date, '%Y-%m') as order_month
+    FROM users u
+    LEFT JOIN orders o ON u.user_id = o.customer_id AND o.status != 'cancelled'
+    WHERE u.user_type IN ('customer', 'both')
+)
+SELECT 
+    cohort_month,
+    COUNT(DISTINCT user_id) as cohort_size,
+    COUNT(DISTINCT CASE WHEN order_month = cohort_month THEN user_id END) as month_0,
+    COUNT(DISTINCT CASE WHEN order_month = DATE_FORMAT(DATE_ADD(STR_TO_DATE(CONCAT(cohort_month, '-01'), '%Y-%m-%d'), INTERVAL 1 MONTH), '%Y-%m') THEN user_id END) as month_1,
+    COUNT(DISTINCT CASE WHEN order_month = DATE_FORMAT(DATE_ADD(STR_TO_DATE(CONCAT(cohort_month, '-01'), '%Y-%m-%d'), INTERVAL 2 MONTH), '%Y-%m') THEN user_id END) as month_2
+FROM cohorts
+GROUP BY cohort_month
+ORDER BY cohort_month;
+
+-- Query 6: Products Frequently Bought Together
+-- Market basket analysis
+SELECT 
+    p1.product_name as product_1,
+    p2.product_name as product_2,
+    COUNT(*) as times_bought_together
+FROM order_items oi1
+JOIN order_items oi2 ON oi1.order_id = oi2.order_id AND oi1.product_id < oi2.product_id
+JOIN products p1 ON oi1.product_id = p1.product_id
+JOIN products p2 ON oi2.product_id = p2.product_id
+GROUP BY p1.product_name, p2.product_name
+HAVING COUNT(*) > 1
+ORDER BY times_bought_together DESC;
+
+-- Query 7: Cart Abandonment Rate
+-- Calculate conversion from cart to purchase
+WITH cart_stats AS (
+    SELECT 
+        COUNT(DISTINCT customer_id) as customers_with_cart
+    FROM shopping_cart
+),
+purchase_stats AS (
+    SELECT 
+        COUNT(DISTINCT customer_id) as customers_purchased
+    FROM orders
+    WHERE status != 'cancelled'
+)
+SELECT 
+    cart_stats.customers_with_cart,
+    purchase_stats.customers_purchased,
+    ROUND((cart_stats.customers_with_cart - purchase_stats.customers_purchased) * 100.0 / cart_stats.customers_with_cart, 2) as abandonment_rate
+FROM cart_stats, purchase_stats;
+
+-- Query 8: Customer Segmentation (RFM Analysis)
+-- Recency, Frequency, Monetary segmentation
+WITH rfm AS (
+    SELECT 
+        customer_id,
+        DATEDIFF('2023-05-31', MAX(order_date)) as recency,
+        COUNT(order_id) as frequency,
+        SUM(total_amount) as monetary
+    FROM orders
+    WHERE status != 'cancelled'
+    GROUP BY customer_id
+),
+rfm_scores AS (
+    SELECT 
+        customer_id,
+        recency,
+        frequency,
+        monetary,
+        NTILE(4) OVER (ORDER BY recency DESC) as r_score,
+        NTILE(4) OVER (ORDER BY frequency ASC) as f_score,
+        NTILE(4) OVER (ORDER BY monetary ASC) as m_score
+    FROM rfm
+)
+SELECT 
+    u.username,
+    r.recency as days_since_last_order,
+    r.frequency as total_orders,
+    r.monetary as total_spent,
+    r.r_score,
+    r.f_score,
+    r.m_score,
+    CASE 
+        WHEN r.r_score >= 3 AND r.f_score >= 3 AND r.m_score >= 3 THEN 'Champions'
+        WHEN r.r_score >= 3 AND r.f_score >= 2 THEN 'Loyal Customers'
+        WHEN r.r_score >= 3 AND r.m_score >= 3 THEN 'Big Spenders'
+        WHEN r.r_score <= 2 AND r.f_score <= 2 THEN 'At Risk'
+        ELSE 'Regular'
+    END as customer_segment
+FROM rfm_scores r
+JOIN users u ON r.customer_id = u.user_id
+ORDER BY r.m_score DESC, r.f_score DESC, r.r_score DESC;
+
+-- Query 9: Product Performance with Moving Average
+-- 3-order moving average of product sales
+SELECT 
+    p.product_name,
+    o.order_date,
+    oi.quantity,
+    AVG(oi.quantity) OVER (
+        PARTITION BY p.product_id 
+        ORDER BY o.order_date 
+        ROWS BETWEEN 2 PRECEDING AND CURRENT ROW
+    ) as moving_avg_quantity
+FROM products p
+JOIN order_items oi ON p.product_id = oi.product_id
+JOIN orders o ON oi.order_id = o.order_id
+WHERE o.status != 'cancelled'
+ORDER BY p.product_name, o.order_date;
+
+-- Query 10: Seller Performance Dashboard
+-- Comprehensive seller metrics
+SELECT 
+    u.username as seller_name,
+    COUNT(DISTINCT p.product_id) as total_products,
+    COUNT(DISTINCT o.order_id) as total_orders,
+    SUM(oi.quantity) as units_sold,
+    SUM(oi.quantity * oi.price_at_purchase) as total_revenue,
+    AVG(r.rating) as avg_rating,
+    COUNT(r.review_id) as review_count
+FROM users u
+JOIN products p ON u.user_id = p.seller_id
+LEFT JOIN order_items oi ON p.product_id = oi.product_id
+LEFT JOIN orders o ON oi.order_id = o.order_id AND o.status != 'cancelled'
+LEFT JOIN reviews r ON p.product_id = r.product_id
+WHERE u.user_type IN ('seller', 'both')
+GROUP BY u.user_id, u.username
+ORDER BY total_revenue DESC;
+
+-- Query 11: Customers Who Bought A but Not B
+-- Find customers who purchased electronics but never clothing
+SELECT DISTINCT
+    u.user_id,
+    u.username,
+    u.email
+FROM users u
+JOIN orders o ON u.user_id = o.customer_id
+JOIN order_items oi ON o.order_id = oi.order_id
+JOIN products p ON oi.product_id = p.product_id
+JOIN categories c ON p.category_id = c.category_id
+WHERE c.category_name = 'Electronics' OR c.parent_category_id = 1
+AND u.user_id NOT IN (
+    SELECT DISTINCT u2.user_id
+    FROM users u2
+    JOIN orders o2 ON u2.user_id = o2.customer_id
+    JOIN order_items oi2 ON o2.order_id = oi2.order_id
+    JOIN products p2 ON oi2.product_id = p2.product_id
+    JOIN categories c2 ON p2.category_id = c2.category_id
+    WHERE c2.category_name = 'Clothing' OR c2.parent_category_id = 4
+);
+
+-- Query 12: Revenue by Payment Method
+-- Analyze payment method popularity and success rates
+SELECT 
+    payment_method,
+    COUNT(*) as transaction_count,
+    SUM(CASE WHEN status = 'completed' THEN 1 ELSE 0 END) as successful_transactions,
+    SUM(CASE WHEN status = 'failed' THEN 1 ELSE 0 END) as failed_transactions,
+    ROUND(SUM(CASE WHEN status = 'completed' THEN 1 ELSE 0 END) * 100.0 / COUNT(*), 2) as success_rate,
+    SUM(CASE WHEN status = 'completed' THEN amount ELSE 0 END) as total_revenue
+FROM payment_transactions
+GROUP BY payment_method
+ORDER BY total_revenue DESC;
+
+-- Query 13: Inventory Alert - Low Stock Products
+-- Identify products that need restocking
+SELECT 
+    p.product_id,
+    p.product_name,
+    p.stock_quantity,
+    COALESCE(SUM(oi.quantity), 0) as total_sold,
+    COALESCE(AVG(oi.quantity), 0) as avg_quantity_per_order,
+    CASE 
+        WHEN p.stock_quantity < 20 THEN 'Critical'
+        WHEN p.stock_quantity < 50 THEN 'Low'
+        ELSE 'Adequate'
+    END as stock_status
+FROM products p
+LEFT JOIN order_items oi ON p.product_id = oi.product_id
+GROUP BY p.product_id, p.product_name, p.stock_quantity
+HAVING stock_status IN ('Critical', 'Low')
+ORDER BY p.stock_quantity ASC;
+
+-- Query 14: Customer Order Gap Analysis
+-- Find gaps between customer orders
+WITH customer_orders AS (
+    SELECT 
+        customer_id,
+        order_date,
+        LAG(order_date) OVER (PARTITION BY customer_id ORDER BY order_date) as previous_order_date
+    FROM orders
+    WHERE status != 'cancelled'
+)
+SELECT 
+    u.username,
+    co.order_date,
+    co.previous_order_date,
+    DATEDIFF(co.order_date, co.previous_order_date) as days_between_orders
+FROM customer_orders co
+JOIN users u ON co.customer_id = u.user_id
+WHERE co.previous_order_date IS NOT NULL
+ORDER BY days_between_orders DESC;
+
+-- Query 15: Product Recommendation Based on Purchase History
+-- For a given product, find what else customers bought
+SELECT 
+    p2.product_name as recommended_product,
+    COUNT(DISTINCT o.customer_id) as customers_who_bought_both,
+    ROUND(AVG(p2.price), 2) as avg_price
+FROM orders o
+JOIN order_items oi1 ON o.order_id = oi1.order_id
+JOIN order_items oi2 ON o.order_id = oi2.order_id
+JOIN products p1 ON oi1.product_id = p1.product_id
+JOIN products p2 ON oi2.product_id = p2.product_id
+WHERE p1.product_name = 'Laptop Pro 15'
+    AND p1.product_id != p2.product_id
+    AND o.status != 'cancelled'
+GROUP BY p2.product_name, p2.product_id
+ORDER BY customers_who_bought_both DESC
+LIMIT 5;
+
+-- Create additional indexes for query optimization
+CREATE INDEX idx_order_date_status ON orders(order_date, status);
+CREATE INDEX idx_product_category_price ON products(category_id, price);
+CREATE INDEX idx_review_product_rating ON reviews(product_id, rating);
+
+-- View for sensitive data access
+CREATE VIEW customer_summary AS
+SELECT 
+    u.user_id,
+    u.username,
+    u.country,
+    COUNT(o.order_id) as total_orders,
+    SUM(o.total_amount) as total_spent
+FROM users u
+LEFT JOIN orders o ON u.user_id = o.customer_id AND o.status != 'cancelled'
+WHERE u.user_type IN ('customer', 'both')
+GROUP BY u.user_id, u.username, u.country;
+
+-- Stored Procedure: Process New Order
+DELIMITER //
+CREATE PROCEDURE process_order(
+    IN p_customer_id INT,
+    IN p_product_id INT,
+    IN p_quantity INT,
+    OUT p_order_id INT
+)
+BEGIN
+    DECLARE v_price DECIMAL(10,2);
+    DECLARE v_stock INT;
+    
+    -- Check stock availability
+    SELECT price, stock_quantity INTO v_price, v_stock
+    FROM products
+    WHERE product_id = p_product_id;
+    
+    IF v_stock >= p_quantity THEN
+        -- Create order
+        INSERT INTO orders (customer_id, order_date, status, total_amount)
+        VALUES (p_customer_id, NOW(), 'pending', v_price * p_quantity);
+        
+        SET p_order_id = LAST_INSERT_ID();
+        
+        -- Add order item
+        INSERT INTO order_items (order_id, product_id, quantity, price_at_purchase)
+        VALUES (p_order_id, p_product_id, p_quantity, v_price);
+        
+        -- Update stock
+        UPDATE products
+        SET stock_quantity = stock_quantity - p_quantity
+        WHERE product_id = p_product_id;
+    ELSE
+        SIGNAL SQLSTATE '45000'
+        SET MESSAGE_TEXT = 'Insufficient stock available';
+    END IF;
+END //
+DELIMITER ;
+
+-- Trigger: Update inventory on order cancellation
+DELIMITER //
+CREATE TRIGGER restore_inventory_on_cancel
+AFTER UPDATE ON orders
+FOR EACH ROW
+BEGIN
+    IF NEW.status = 'cancelled' AND OLD.status != 'cancelled' THEN
+        UPDATE products p
+        JOIN order_items oi ON p.product_id = oi.product_id
+        SET p.stock_quantity = p.stock_quantity + oi.quantity
+        WHERE oi.order_id = NEW.order_id;
+    END IF;
+END //
+DELIMITER ;
