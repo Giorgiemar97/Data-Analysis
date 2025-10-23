@@ -1,0 +1,388 @@
+-- ============================================
+-- WRITERS & PUBLICATIONS DATABASE
+-- ============================================
+
+-- ============================================
+-- PART 1: DATABASE SCHEMA
+-- ============================================
+
+-- Writers table
+CREATE TABLE writers (
+    writer_id INT PRIMARY KEY AUTO_INCREMENT,
+    name VARCHAR(100) NOT NULL,
+    pen_name VARCHAR(100),
+    birth_year INT,
+    country VARCHAR(50),
+    genre_specialty VARCHAR(50),
+    INDEX idx_country (country),
+    INDEX idx_genre (genre_specialty)
+);
+
+-- Books table
+CREATE TABLE books (
+    book_id INT PRIMARY KEY AUTO_INCREMENT,
+    writer_id INT NOT NULL,
+    title VARCHAR(255) NOT NULL,
+    publication_year INT NOT NULL,
+    genre VARCHAR(50) NOT NULL,
+    pages INT,
+    publisher VARCHAR(100),
+    FOREIGN KEY (writer_id) REFERENCES writers(writer_id),
+    INDEX idx_writer (writer_id),
+    INDEX idx_genre (genre),
+    INDEX idx_pub_year (publication_year)
+);
+
+-- Awards table
+CREATE TABLE awards (
+    award_id INT PRIMARY KEY AUTO_INCREMENT,
+    book_id INT NOT NULL,
+    award_name VARCHAR(100) NOT NULL,
+    award_year INT NOT NULL,
+    award_category VARCHAR(100),
+    FOREIGN KEY (book_id) REFERENCES books(book_id),
+    INDEX idx_book (book_id)
+);
+
+-- Book Sales table
+CREATE TABLE book_sales (
+    sale_id INT PRIMARY KEY AUTO_INCREMENT,
+    book_id INT NOT NULL,
+    sale_date DATE NOT NULL,
+    copies_sold INT NOT NULL,
+    revenue DECIMAL(10, 2) NOT NULL,
+    FOREIGN KEY (book_id) REFERENCES books(book_id),
+    INDEX idx_book (book_id),
+    INDEX idx_date (sale_date)
+);
+
+-- Collaborations table (for co-authored books)
+CREATE TABLE collaborations (
+    collaboration_id INT PRIMARY KEY AUTO_INCREMENT,
+    book_id INT NOT NULL,
+    writer_id INT NOT NULL,
+    role VARCHAR(50), -- 'co-author', 'contributor', 'editor'
+    FOREIGN KEY (book_id) REFERENCES books(book_id),
+    FOREIGN KEY (writer_id) REFERENCES writers(writer_id),
+    INDEX idx_book (book_id),
+    INDEX idx_writer (writer_id)
+);
+
+-- ============================================
+-- PART 2: SAMPLE DATA
+-- ============================================
+
+-- Insert Writers
+INSERT INTO writers (name, pen_name, birth_year, country, genre_specialty) VALUES
+('Margaret Atwood', NULL, 1939, 'Canada', 'Fiction'),
+('Stephen King', 'Richard Bachman', 1947, 'USA', 'Horror'),
+('Haruki Murakami', NULL, 1949, 'Japan', 'Fiction'),
+('J.K. Rowling', 'Robert Galbraith', 1965, 'UK', 'Fantasy'),
+('Neil Gaiman', NULL, 1960, 'UK', 'Fantasy'),
+('Chimamanda Ngozi Adichie', NULL, 1977, 'Nigeria', 'Fiction'),
+('George R.R. Martin', NULL, 1948, 'USA', 'Fantasy'),
+('Ursula K. Le Guin', NULL, 1929, 'USA', 'Science Fiction'),
+('Octavia Butler', NULL, 1947, 'USA', 'Science Fiction'),
+('Gabriel García Márquez', NULL, 1927, 'Colombia', 'Fiction');
+
+-- Insert Books
+INSERT INTO books (writer_id, title, publication_year, genre, pages, publisher) VALUES
+(1, 'The Handmaid''s Tale', 1985, 'Fiction', 311, 'McClelland & Stewart'),
+(1, 'Oryx and Crake', 2003, 'Science Fiction', 376, 'McClelland & Stewart'),
+(2, 'The Shining', 1977, 'Horror', 447, 'Doubleday'),
+(2, 'It', 1986, 'Horror', 1138, 'Viking'),
+(2, 'The Stand', 1978, 'Horror', 823, 'Doubleday'),
+(3, 'Norwegian Wood', 1987, 'Fiction', 296, 'Kodansha'),
+(3, 'Kafka on the Shore', 2002, 'Fiction', 480, 'Shinchosha'),
+(4, 'Harry Potter and the Philosopher''s Stone', 1997, 'Fantasy', 223, 'Bloomsbury'),
+(4, 'Harry Potter and the Chamber of Secrets', 1998, 'Fantasy', 251, 'Bloomsbury'),
+(4, 'The Casual Vacancy', 2012, 'Fiction', 503, 'Little, Brown'),
+(5, 'American Gods', 2001, 'Fantasy', 465, 'William Morrow'),
+(5, 'Coraline', 2002, 'Fantasy', 162, 'HarperCollins'),
+(6, 'Half of a Yellow Sun', 2006, 'Fiction', 433, 'Knopf'),
+(6, 'Americanah', 2013, 'Fiction', 477, 'Knopf'),
+(7, 'A Game of Thrones', 1996, 'Fantasy', 694, 'Bantam'),
+(7, 'A Clash of Kings', 1998, 'Fantasy', 761, 'Bantam'),
+(8, 'The Left Hand of Darkness', 1969, 'Science Fiction', 304, 'Ace Books'),
+(8, 'The Dispossessed', 1974, 'Science Fiction', 387, 'Harper & Row'),
+(9, 'Kindred', 1979, 'Science Fiction', 287, 'Doubleday'),
+(9, 'Parable of the Sower', 1993, 'Science Fiction', 299, 'Four Walls Eight Windows'),
+(10, 'One Hundred Years of Solitude', 1967, 'Fiction', 417, 'Harper & Row'),
+(10, 'Love in the Time of Cholera', 1985, 'Fiction', 348, 'Alfred A. Knopf');
+
+-- Insert Awards
+INSERT INTO awards (book_id, award_name, award_year, award_category) VALUES
+(1, 'Arthur C. Clarke Award', 1987, 'Best Science Fiction'),
+(1, 'Governor General''s Award', 1985, 'Fiction'),
+(8, 'Nestlé Smarties Book Prize', 1997, 'Children''s Literature'),
+(11, 'Hugo Award', 2002, 'Best Novel'),
+(11, 'Nebula Award', 2002, 'Best Novel'),
+(13, 'Orange Prize', 2007, 'Fiction'),
+(17, 'Hugo Award', 1970, 'Best Novel'),
+(17, 'Nebula Award', 1969, 'Best Novel'),
+(18, 'Hugo Award', 1975, 'Best Novel'),
+(18, 'Nebula Award', 1974, 'Best Novel'),
+(21, 'Neustadt International Prize', 1972, 'Literature'),
+(14, 'National Book Critics Circle Award', 2013, 'Fiction');
+
+-- Insert Book Sales
+INSERT INTO book_sales (book_id, sale_date, copies_sold, revenue) VALUES
+(1, '2020-01-15', 1200, 18000.00),
+(1, '2020-02-20', 1500, 22500.00),
+(3, '2020-01-10', 2000, 30000.00),
+(4, '2020-02-05', 2500, 37500.00),
+(8, '2020-01-01', 15000, 225000.00),
+(8, '2020-02-01', 12000, 180000.00),
+(8, '2020-03-01', 18000, 270000.00),
+(9, '2020-01-15', 10000, 150000.00),
+(11, '2020-02-10', 3500, 52500.00),
+(13, '2020-01-20', 2200, 33000.00),
+(15, '2020-02-15', 5000, 75000.00),
+(17, '2020-01-05', 1800, 27000.00),
+(19, '2020-02-25', 1500, 22500.00),
+(21, '2020-01-30', 3000, 45000.00);
+
+-- Insert Collaborations (example of co-authored work)
+INSERT INTO collaborations (book_id, writer_id, role) VALUES
+(11, 5, 'author'),
+(12, 5, 'author');
+
+-- ============================================
+-- PART 3: INTERESTING SQL QUERIES
+-- ============================================
+
+-- Query 1: Most Prolific Writers
+-- Count books per writer with their specialty
+SELECT 
+    w.name,
+    w.genre_specialty,
+    COUNT(b.book_id) as total_books,
+    MIN(b.publication_year) as first_publication,
+    MAX(b.publication_year) as latest_publication,
+    MAX(b.publication_year) - MIN(b.publication_year) as years_active
+FROM writers w
+LEFT JOIN books b ON w.writer_id = b.writer_id
+GROUP BY w.writer_id, w.name, w.genre_specialty
+ORDER BY total_books DESC;
+
+-- Query 2: Award-Winning Books and Writers
+-- Show which writers have won the most awards
+SELECT 
+    w.name,
+    b.title,
+    COUNT(a.award_id) as award_count,
+    GROUP_CONCAT(a.award_name SEPARATOR ', ') as awards
+FROM writers w
+JOIN books b ON w.writer_id = b.writer_id
+JOIN awards a ON b.book_id = a.book_id
+GROUP BY w.name, b.title, w.writer_id, b.book_id
+ORDER BY award_count DESC;
+
+-- Query 3: Best-Selling Books with Running Total
+-- Calculate cumulative sales over time
+SELECT 
+    b.title,
+    w.name as author,
+    bs.sale_date,
+    bs.copies_sold,
+    bs.revenue,
+    SUM(bs.copies_sold) OVER (PARTITION BY b.book_id ORDER BY bs.sale_date) as cumulative_copies,
+    SUM(bs.revenue) OVER (PARTITION BY b.book_id ORDER BY bs.sale_date) as cumulative_revenue
+FROM book_sales bs
+JOIN books b ON bs.book_id = b.book_id
+JOIN writers w ON b.writer_id = w.writer_id
+ORDER BY b.book_id, bs.sale_date;
+
+-- Query 4: Genre Performance Analysis
+-- Compare genres by sales and awards
+SELECT 
+    b.genre,
+    COUNT(DISTINCT b.book_id) as total_books,
+    COUNT(DISTINCT a.award_id) as total_awards,
+    COALESCE(SUM(bs.copies_sold), 0) as total_copies_sold,
+    COALESCE(SUM(bs.revenue), 0) as total_revenue,
+    COALESCE(AVG(bs.revenue), 0) as avg_revenue_per_sale
+FROM books b
+LEFT JOIN awards a ON b.book_id = a.book_id
+LEFT JOIN book_sales bs ON b.book_id = bs.book_id
+GROUP BY b.genre
+ORDER BY total_revenue DESC;
+
+-- Query 5: Writers by Decade of First Publication
+-- Analyze publication trends across decades
+SELECT 
+    FLOOR(b.publication_year / 10) * 10 as decade,
+    COUNT(DISTINCT w.writer_id) as new_writers,
+    COUNT(b.book_id) as books_published,
+    AVG(b.pages) as avg_pages
+FROM books b
+JOIN writers w ON b.writer_id = w.writer_id
+GROUP BY FLOOR(b.publication_year / 10) * 10
+ORDER BY decade;
+
+-- Query 6: Writer Productivity by Career Stage
+-- Compare early vs recent works
+WITH writer_books AS (
+    SELECT 
+        w.writer_id,
+        w.name,
+        b.book_id,
+        b.publication_year,
+        b.pages,
+        ROW_NUMBER() OVER (PARTITION BY w.writer_id ORDER BY b.publication_year) as book_number,
+        COUNT(*) OVER (PARTITION BY w.writer_id) as total_books
+    FROM writers w
+    JOIN books b ON w.writer_id = b.writer_id
+)
+SELECT 
+    name,
+    AVG(CASE WHEN book_number <= 2 THEN pages END) as avg_pages_early_career,
+    AVG(CASE WHEN book_number > 2 THEN pages END) as avg_pages_later_career,
+    total_books
+FROM writer_books
+WHERE total_books >= 3
+GROUP BY name, writer_id, total_books;
+
+-- Query 7: Sales Performance Ranking by Genre
+-- Rank books within their genre by revenue
+SELECT 
+    b.genre,
+    b.title,
+    w.name as author,
+    SUM(bs.revenue) as total_revenue,
+    RANK() OVER (PARTITION BY b.genre ORDER BY SUM(bs.revenue) DESC) as genre_rank
+FROM books b
+JOIN writers w ON b.writer_id = w.writer_id
+JOIN book_sales bs ON b.book_id = bs.book_id
+GROUP BY b.genre, b.title, w.name, b.book_id
+ORDER BY b.genre, genre_rank;
+
+-- Query 8: Writers Who Haven't Published Recently
+-- Find writers with no books in the last 15 years
+SELECT 
+    w.name,
+    w.country,
+    MAX(b.publication_year) as last_publication,
+    2025 - MAX(b.publication_year) as years_since_last_book,
+    COUNT(b.book_id) as total_books
+FROM writers w
+JOIN books b ON w.writer_id = b.writer_id
+GROUP BY w.writer_id, w.name, w.country
+HAVING years_since_last_book > 15
+ORDER BY years_since_last_book DESC;
+
+-- Query 9: Award Winners vs Non-Winners Sales Comparison
+-- Compare commercial success of award-winning vs non-award-winning books
+SELECT 
+    CASE 
+        WHEN a.award_id IS NOT NULL THEN 'Award Winner'
+        ELSE 'No Award'
+    END as award_status,
+    COUNT(DISTINCT b.book_id) as book_count,
+    COALESCE(AVG(bs.copies_sold), 0) as avg_copies_per_sale,
+    COALESCE(AVG(bs.revenue), 0) as avg_revenue_per_sale
+FROM books b
+LEFT JOIN awards a ON b.book_id = a.book_id
+LEFT JOIN book_sales bs ON b.book_id = bs.book_id
+GROUP BY award_status;
+
+-- Query 10: Country Representation in Literature
+-- Analyze which countries produce the most published writers
+SELECT 
+    w.country,
+    COUNT(DISTINCT w.writer_id) as writer_count,
+    COUNT(b.book_id) as total_books,
+    COUNT(a.award_id) as total_awards,
+    ROUND(COUNT(a.award_id) * 1.0 / COUNT(b.book_id), 3) as awards_per_book
+FROM writers w
+LEFT JOIN books b ON w.writer_id = b.writer_id
+LEFT JOIN awards a ON b.book_id = a.book_id
+GROUP BY w.country
+ORDER BY writer_count DESC, total_awards DESC;
+
+-- Query 11: Books with Multiple Awards
+-- Find the most decorated books
+SELECT 
+    b.title,
+    w.name as author,
+    b.publication_year,
+    COUNT(a.award_id) as award_count,
+    GROUP_CONCAT(CONCAT(a.award_name, ' (', a.award_year, ')') SEPARATOR ' | ') as all_awards
+FROM books b
+JOIN writers w ON b.writer_id = w.writer_id
+JOIN awards a ON b.book_id = a.book_id
+GROUP BY b.book_id, b.title, w.name, b.publication_year
+HAVING award_count > 1
+ORDER BY award_count DESC;
+
+-- Query 12: Monthly Sales Trends
+-- Analyze which months have the best sales
+SELECT 
+    MONTH(sale_date) as month,
+    MONTHNAME(sale_date) as month_name,
+    COUNT(DISTINCT book_id) as books_sold,
+    SUM(copies_sold) as total_copies,
+    SUM(revenue) as total_revenue,
+    AVG(revenue) as avg_revenue_per_transaction
+FROM book_sales
+GROUP BY MONTH(sale_date), MONTHNAME(sale_date)
+ORDER BY month;
+
+-- ============================================
+-- PART 4: ADVANCED FEATURES
+-- ============================================
+
+-- View: Writer Summary Dashboard
+CREATE VIEW writer_dashboard AS
+SELECT 
+    w.writer_id,
+    w.name,
+    w.country,
+    w.genre_specialty,
+    COUNT(DISTINCT b.book_id) as total_books,
+    COUNT(DISTINCT a.award_id) as total_awards,
+    COALESCE(SUM(bs.revenue), 0) as lifetime_revenue
+FROM writers w
+LEFT JOIN books b ON w.writer_id = b.writer_id
+LEFT JOIN awards a ON b.book_id = a.book_id
+LEFT JOIN book_sales bs ON b.book_id = bs.book_id
+GROUP BY w.writer_id, w.name, w.country, w.genre_specialty;
+
+-- Stored Procedure: Get Writer's Complete Bibliography
+DELIMITER //
+CREATE PROCEDURE get_writer_bibliography(IN p_writer_name VARCHAR(100))
+BEGIN
+    SELECT 
+        b.title,
+        b.publication_year,
+        b.genre,
+        b.pages,
+        COUNT(DISTINCT a.award_id) as awards,
+        COALESCE(SUM(bs.copies_sold), 0) as total_copies_sold
+    FROM writers w
+    JOIN books b ON w.writer_id = b.writer_id
+    LEFT JOIN awards a ON b.book_id = a.book_id
+    LEFT JOIN book_sales bs ON b.book_id = bs.book_id
+    WHERE w.name = p_writer_name
+    GROUP BY b.book_id, b.title, b.publication_year, b.genre, b.pages
+    ORDER BY b.publication_year;
+END //
+DELIMITER ;
+
+-- Function: Calculate Writer's Career Span
+DELIMITER //
+CREATE FUNCTION get_career_span(p_writer_id INT)
+RETURNS INT
+DETERMINISTIC
+READS SQL DATA
+BEGIN
+    DECLARE span INT;
+    
+    SELECT MAX(publication_year) - MIN(publication_year)
+    INTO span
+    FROM books
+    WHERE writer_id = p_writer_id;
+    
+    RETURN COALESCE(span, 0);
+END //
+DELIMITER ;
