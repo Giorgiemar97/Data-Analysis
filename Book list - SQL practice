@@ -1,0 +1,45 @@
+CREATE TABLE books (
+    book_id INT PRIMARY KEY,
+    title VARCHAR(100),
+    author VARCHAR(100),
+    genre VARCHAR(50),
+    publication_year INT,
+    rating INT
+);
+
+CREATE TABLE reading_log (
+    log_id INT PRIMARY KEY,
+    book_id INT,
+    start_date DATE,
+    finish_date DATE,
+    notes TEXT,
+    FOREIGN KEY (book_id) REFERENCES books(book_id)
+);
+
+INSERT INTO books (book_id, title, author, genre, publication_year, rating) VALUES
+(1, 'The Siren', 'Kiera Cass', 'Fantasy', 2016, 4),
+(2, 'Forget Me Not', 'Ellie Terry', 'Middle Grade Fiction', 2017, 5),
+(3, 'What You Are Looking For Is in the Library', 'Michiko Aoyama', 'Contemporary Fiction', 2020, 4),
+(4, 'Sunset Gratitude', 'Emily Silva', 'Poetry', 2021, 5),
+(5, 'Sunrise on the Reaping', 'Suzanne Collins', 'Dystopian Fiction', 2025, 3);
+
+
+INSERT INTO reading_log (log_id, book_id, start_date, finish_date, notes) VALUES
+(1, 1, '2024-01-15', '2024-01-22', 'Beautiful retelling with a unique twist'),
+(2, 2, '2024-03-10', '2024-03-14', 'Touching story about friendship and memory'),
+(3, 3, '2024-05-01', NULL, 'Currently reading - loving the heartwarming stories'),
+(4, 4, '2024-06-20', '2024-06-20', 'Quick read, perfect for reflection'),
+(5, 5, '2024-08-12', '2024-08-30', 'Interesting return to Panem');
+
+
+-- Query 1: Finding all unfinished books
+SELECT b.title, b.author, rl.start_date
+FROM books b
+JOIN reading_log rl ON b.book_id = rl.book_id
+WHERE rl.finish_date IS NULL;
+
+-- Query 2: Calculating average rating by genre
+SELECT genre, AVG(rating) as average_rating, COUNT(*) as book_count
+FROM books
+GROUP BY genre
+ORDER BY average_rating DESC;
