@@ -1,0 +1,23 @@
+CREATE TABLE Christmas_gifts (
+    GiftID INTEGER PRIMARY KEY AUTOINCREMENT,
+    For_Who TEXT NOT NULL,
+    What_is_it TEXT NOT NULL,
+    Has_been_bought TEXT CHECK(Has_been_bought IN ('Yes', 'No')) DEFAULT 'No',
+    When_bought DATE,
+    Has_been_given TEXT CHECK(Has_been_given IN ('Yes', 'No')) DEFAULT 'No'
+);
+
+--Inserting some of the columns into the table
+INSERT INTO Christmas_gifts (For_Who, What_is_it, Has_been_bought, When_bought, Has_been_given)
+VALUES 
+('Husband', 'Calendar', 'Yes', '2025-10-22', 'No'),
+('Sister', 'Makeup Bag', 'No', NULL, 'No'),
+('Brother', 'Video game', 'Yes', '2025-11-05', 'Yes'),
+ ('Mom', 'Cozy blanket', 'Yes', '2025-10-31', 'No');
+
+-- Find gifts that have been bought but not given
+SELECT * FROM Christmas_gifts WHERE Has_been_bought = 'Yes' AND Has_been_given = 'No';
+
+-- Find gifts that have NOT been bought
+SELECT * FROM Christmas_gifts WHERE Has_been_bought = 'No';
+
