@@ -1,0 +1,88 @@
+-- Create Candidates table
+CREATE TABLE Candidates (
+    candidate_id INT PRIMARY KEY AUTO_INCREMENT,
+    first_name VARCHAR(50) NOT NULL,
+    last_name VARCHAR(50) NOT NULL,
+    email VARCHAR(100) NOT NULL UNIQUE,
+    phone VARCHAR(20),
+    resume_url VARCHAR(255),
+    application_date DATE NOT NULL,
+    position_applied VARCHAR(100) NOT NULL
+);
+
+-- Create Application_Status table
+CREATE TABLE Application_Status (
+    status_id INT PRIMARY KEY AUTO_INCREMENT,
+    candidate_id INT NOT NULL,
+    current_status VARCHAR(50) NOT NULL,
+    hiring_manager VARCHAR(100),
+    last_updated DATE NOT NULL,
+    notes TEXT,
+    FOREIGN KEY (candidate_id) REFERENCES Candidates(candidate_id) ON DELETE CASCADE
+);
+
+-- Insert sample data into Candidates table
+INSERT INTO Candidates (first_name, last_name, email, phone, resume_url, application_date, position_applied)
+VALUES 
+    ('Ruby', 'Mar', 'ruby.mar@email.com', '555-0101', '/resumes/ruby_mar.pdf', '2025-11-14', 'Data Analyst'),
+    ('John', 'Smith', 'john.smith@email.com', '555-0102', '/resumes/john_smith.pdf', '2025-11-12', 'Software Engineer'),
+    ('Sarah', 'Johnson', 'sarah.j@email.com', '555-0103', '/resumes/sarah_j.pdf', '2025-11-10', 'Data Analyst');
+
+-- Insert sample data into Application_Status table
+INSERT INTO Application_Status (candidate_id, current_status, hiring_manager, last_updated, notes)
+VALUES 
+    (1, 'Interview', 'Lisa Chen', '2025-11-14', 'Technical interview scheduled for 11/20'),
+    (2, 'Screening', 'Mark Wilson', '2025-11-13', 'Phone screening completed'),
+    (3, 'Applied', 'Lisa Chen', '2025-11-10', 'Awaiting initial review');
+
+SELECT 
+    c.candidate_id,
+    c.first_name,
+    c.last_name,
+    c.email,
+    c.position_applied,
+    c.application_date,
+    a.current_status,
+    a.hiring_manager,
+    a.last_updated
+FROM 
+    Candidates c
+INNER JOIN 
+    Application_Status a ON c.candidate_id = a.candidate_id
+ORDER BY 
+    c.application_date DESC;
+
+
+SELECT 
+    c.position_applied,
+    a.current_status,
+    COUNT(*) as candidate_count
+FROM 
+    Candidates c
+INNER JOIN 
+    Application_Status a ON c.candidate_id = a.candidate_id
+GROUP BY 
+    c.position_applied, a.current_status
+ORDER BY 
+    c.position_applied, candidate_count DESC;
+
+
+SELECT 
+    c.first_name,
+    c.last_name,
+    c.email,
+    c.phone,
+    c.application_date,
+    a.current_status,
+    a.last_updated,
+    a.notes
+FROM 
+    Candidates c
+INNER JOIN 
+    Application_Status a ON c.candidate_id = a.candidate_id
+WHERE 
+    c.position_applied = 'Data Analyst'
+    AND a.current_status = 'Interview'
+    AND a.hiring_manager = 'Lisa Chen'
+ORDER BY 
+    a.last_updated DESC;
